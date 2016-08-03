@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!--
+         **
+         * Auther:      掌心
+         * Contact:     http://www.zhanxin.info
+         * Create:      2013.08.10
+         * Theme Name:  Kunka
+         * Authorize:   BY-NC-SA
+         **
+        -->
+        <meta charset="utf-8">
+        <title>ISCC 2016 Web Writeup - AIRSHIT</title>
+        <!-- meta -->
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <meta name="generator" content="Jekyll" />
+        <meta name="author" content="AIRSHTI" />
+        <meta name="description" content="" />
+        <meta name="keywords" content="" />
+        <!-- atom -->
+        <link rel="alternate" type="application/atom+xml" title="Recent Entries" href="https://airshit.github.io//atom.xml" />
+        <link rel="shortcut icon" href="/assets/icon.ico" type="image/x-icon" />
+        <!-- font-awesome -->
+        <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+        <link href='http://fonts.googleapis.com/css?family=Spirax' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="https://airshit.github.io//css/syntax.css">
+        <link rel="stylesheet" href="https://airshit.github.io//css/main.css">
+        
+        <script type="text/javascript">
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-78963269-1']);
+            _gaq.push(['_trackPageview']);
+            (function() {
+              var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                  ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+              var s = document.getElementsByTagName('script')[0];
+                  s.parentNode.insertBefore(ga, s);
+            })();
+        </script>
+        
+    </head>
+    <body>
+        <div class="head fn-clear">
+            <div class="header">
+                <h1 class="logo">
+                    <a href="https://airshit.github.io/"><i class="icon-anchor"></i></a>
+                </h1>
+                <nav class="nav">
+                    <ul>
+                        
+                        
+                        
+                        <li class="nav-item ">
+                            <a href="https://airshit.github.io//index.html">
+                                首页
+                            </a>
+                            
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item ">
+                            <a href="https://airshit.github.io//categories.html">
+                                分类目录
+                            </a>
+                            
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item ">
+                            <a href="https://airshit.github.io//archives.html">
+                                文章归档
+                            </a>
+                            
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item ">
+                            <a href="https://airshit.github.io//contact.html">
+                                联系我
+                            </a>
+                            
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item ">
+                            <a href="https://airshit.github.io//links.html">
+                                友情链接
+                            </a>
+                            
+                        </li>
+                        
+                    </ul>
+                </nav>
+                <div class="follow">
+                    
+                    <a href="/atom.xml" target="_blank"><i class="icon-rss"></i></a>
+                    
+                    <a href="http://weibo.com/AIR5HIT" target="_blank"><i class="icon-weibo"></i></a>
+                    
+                    <a href="http://github.com/AIRSHIT" target="_blank"><i class="icon-github-alt"></i></a>
+                    
+                </div>
+            </div>
+        </div>
+        <div class="contain fn-clear">
+            <div class="container fn-clear">
+                <div class="main">
+                    <div class="article article-post">
+    <h2 class="title">ISCC 2016 Web Writeup</h2>
+    <div class="info">
+        <span class="info-title"><i class="icon-calendar"></i> Published: </span>
+        <span class="info-date">18 Jun 2016</span>
+        <span class="info-title"><i class="icon-folder-open"></i> Category: </span>
+        <span class="info-link"><a href="https://airshit.github.io//categories.html#CTF Web-ref" >CTF Web</a></span>
+    </div>
+    <h2>0x00 引言</h2>
+
+<p>终于有一次理解性的撸完了一次CTF的一个部分，虽然很多都是各种<del>参考</del>。写完最后的Web500感觉好有成就感啊233.
+不废话了。ISCC地址http://iscc.isclab.org.cn/</p>
+
+<h2>0x01 Web 150 flag in flag</h2>
+
+<p>注入题。先看一下源码把，重点就是这两句。pw存在注入，然后只能使用flag用户登录。</p>
+
+<pre><code>$sql = "select user from user where pw='$pass'";
+if ($row[user] == "flag" &amp;&amp; $user=="flag") {
+</code></pre>
+
+<p>打开BP，union注入，搞定。
+<img src="/assets/ISCC2016/01.png" width=100%></p>
+
+<h2>0x02 Web300 PING出事了吧</h2>
+
+<p>第二题，命令注入，折腾了半天死活不知道怎么搞。后来。。。google到的提示是加.txt有源码看，我的心情几乎是崩溃的。</p>
+
+<pre><code>$pattern='/^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(([&amp;]{2}|[;|])dir[\sa-zA-Z0-9]*)?$/';
+if( isset($_GET['file']))
+{
+    include($_GET['file']);
+}
+</code></pre>
+
+<p>两个地方，一个输入判断的正则表达式，另一个是一个文件包含。（话说这个间隔不用空格的。。。我当初为什么要多打个空格呢。。。）依照正则表达式，<code>127.0.0.1&amp;&amp;dir</code> 有个文件夹，进一步<code>127.0.0.1&amp;&amp;dir 1C9976C230DA289C1C359CD2A7C02D48</code>  发现一个flag.php，这里结合上面发现的文件包含，去包含这个文件，得到一个flag，但是这个flag是假的（冷漠）。后来发现原来是直接访问这个文件，才得到flag，这个源码提示真是坑。</p>
+
+<h2>0x03 Web 350 simple injection</h2>
+
+<p>注入，试了一下用户名有注入点。验证逻辑是将查询到的密码与输入密码的MD5相比。（好想知道大牛是怎么测出这个逻辑的）然后就构造payload。发现有waf，需要绕过。</p>
+
+<p><img src="/assets/ISCC2016/02.png" width=100%></p>
+
+<p>搞定。</p>
+
+<h2>0x04 Web 350 double kill</h2>
+
+<p>一个上传图片浏览图片的站点，从页面的地址猜出有文件包含。</p>
+
+<pre><code>http://101.200.145.44/web5/index.php?page=view
+</code></pre>
+
+<p>然后怎么办呢，既然能上传文件那就试试上传代码咯。但是改后缀名上传PHP是不行的...得到提示后发现是往图片里写入代码，不过这里的木马限制得很严格，只有<code>&lt;script language=php&gt;</code>这样子的才行。
+访问图片的时候，发现了图片的路径。</p>
+
+<p><img src="/assets/ISCC2016/03.png" width=100%></p>
+
+<p>制作图片马，上传，包含，用%00截断，flag到手。</p>
+
+<p><img src="/assets/ISCC2016/04.png" width=100%></p>
+
+<p>这里的知识点是，文件包含会把文件当成php文件执行，也会在文件末端自动添加.php，所以要使用%00截断。</p>
+
+<h2>0x05 Web500 糊涂的小明</h2>
+
+<p>题目一点开就是一张迷之图片，还有一个链接。总之不管了，右键，发现一个小提示。</p>
+
+<pre><code>&lt;img src="proxy.php?url=http://imgsrc.baidu.com/forum/w%3D580/sign=cae9ccf405082838680ddc1c8898a964/90529822720e0cf33a5c29100846f21fbf09aab6.jpg" alt=""&gt;
+</code></pre>
+
+<p>线索一，然后回到页面。点击登录，果然没那么简单，继续右键，注释写着管理员的IP，线索二。两个线索结合，尝试一下。</p>
+
+<pre><code>http://101.200.145.44/web4/proxy.php?url=http://121.42.171.222
+</code></pre>
+
+<p>唔...好吧没那么简单。页面地址跳转到了另外一个。</p>
+
+<pre><code>http://101.200.145.44/web4/index.php?url=http://www.isclab.org.cn
+</code></pre>
+
+<p>又没思路了，没办法了继续google。得到提示说<code>http://121.42.171.222</code>下有一个<code>proxy.php</code>，我自己用御剑扫倒是没扫出来，后面的也是，真想求个工具包啊...综上，得到地址。访问，终于看到希望了。</p>
+
+<pre><code>http://101.200.145.44/web4/proxy.php?url=http://121.42.171.222/proxy.php?url=http://101.200.145.44/web4/admin/
+</code></pre>
+
+<p><img src="/assets/ISCC2016/05.png" width=100%></p>
+
+<p>继续右键，这里直接点击页面当然是访问不了的，需要构造下面的链接。</p>
+
+<pre><code>http://101.200.145.44/web4/proxy.php?url=http://121.42.171.222/proxy.php?url=http://101.200.145.44/web4/admin/register.html
+</code></pre>
+
+<p>得到一个页面，转悠了几下，注册后也不能登陆，试一下注入，什么都没发现，又卡住啦。继续google（<del>揍</del>）。得到的提示又是扫描，好想要一份字典。唉不说了，<code>robots.txt</code>得到下一步提示。</p>
+
+<pre><code>User-agent: *
+Disallow:trojan.php
+Disallow:trojan.php.txt
+Disallow:check.php
+Disallow:check.php.txt
+</code></pre>
+
+<p>进一步查看。<code>trojan.php</code>对session进行验证，后面一段混淆的代码折腾了我半天，还是不知道什么原理，后来才知道是一句话，页面名也正好是是taojan......继续，<code>check.php</code>是登陆表单验证，完全没有注入的可能，只能用admin登陆。好吧又没思路了，下一个提示，mysql长文件截断。继续开工，具体就是<code>admin(n个空格)x</code>，通过这样子更新密码。回到注册页面。验证码因为两次proxy.php的关系没法打开，动点手脚。</p>
+
+<p><img src="/assets/ISCC2016/06.png" width=100%></p>
+
+<p>以上，然后打开BP。</p>
+
+<p><img src="/assets/ISCC2016/07.png" width=100%></p>
+
+<p>成功，使用密码登陆。访问<code>taojan.php</code>，从混淆的代码得到的一句话密码是360，打开hackbar。</p>
+
+<p><img src="/assets/ISCC2016/08.png" width=100%></p>
+
+<p>flag到手。</p>
+
+    <nav class="article-previous fn-clear">
+        
+        
+        <a class="next" href="/CTF Web/2016/08/02/NUPTZJ.html" rel="bookmark">南邮综合题2Writeup&nbsp;&raquo;</a>
+        
+    </nav>
+    <div class="comment">
+        
+            
+            <div class="ds-thread"></div>
+            
+        
+    </div>
+</div>
+
+                </div>
+                <div class="aside">
+                    <div class="aside-contact">
+                        <h4 class="title">About me</h4>
+                        <div class="det fn-clear">
+                            <div class="det-image">
+                                <img src="/assets/avatar.jpg" />
+                            </div>
+                            <div class="det-text">
+                                <p>还在寻找自己的旅途。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="aside-item">
+                        <h4 class="title">Recent Posts</h4>
+                        <ul class="list">
+                            
+                                <li><a href="https://airshit.github.io//CTF Web/2016/08/02/NUPTZJ.html" title="南邮综合题2Writeup" rel="bookmark">南邮综合题2Writeup</a></li>
+                            
+                                <li><a href="https://airshit.github.io//CTF Web/2016/06/18/ISCC2016.html" title="ISCC 2016 Web Writeup" rel="bookmark">ISCC 2016 Web Writeup</a></li>
+                            
+                        </ul>
+                    </div>
+
+                    <div class="aside-item">
+                        <h4 class="title">Links</h4>
+                        <ul class="list">
+                            
+                                
+                                    
+                                
+                            
+                                
+                            
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="foot">
+            <div class="footer">
+                <p>Copyright 2013. All rights reserved. Powered by <a href="http://jekyllrb.com" target="_blank">Jekyll</a>, Design by <a href="http://www.zhanxin.info" target="_blank">zhanxin.info</a>.</p>
+            </div>
+        </div>
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+        
+            
+                
+                <script type="text/javascript">
+                    var duoshuoQuery = {short_name:"AIRSHIT"};
+                    (function() {
+                        var ds = document.createElement('script');
+                        ds.type = 'text/javascript';ds.async = true;
+                        ds.src = 'http://static.duoshuo.com/embed.js';
+                        ds.charset = 'UTF-8';
+                        (document.getElementsByTagName('head')[0]
+                        || document.getElementsByTagName('body')[0]).appendChild(ds);
+                    })();
+                </script>
+                
+            
+        
+    </body>
+</html>

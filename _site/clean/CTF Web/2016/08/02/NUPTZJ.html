@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!--
+         **
+         * Auther:      掌心
+         * Contact:     http://www.zhanxin.info
+         * Create:      2013.08.10
+         * Theme Name:  Kunka
+         * Authorize:   BY-NC-SA
+         **
+        -->
+        <meta charset="utf-8">
+        <title>南邮综合题2Writeup - AIRSHIT</title>
+        <!-- meta -->
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <meta name="generator" content="Jekyll" />
+        <meta name="author" content="AIRSHTI" />
+        <meta name="description" content="" />
+        <meta name="keywords" content="" />
+        <!-- atom -->
+        <link rel="alternate" type="application/atom+xml" title="Recent Entries" href="https://airshit.github.io//atom.xml" />
+        <link rel="shortcut icon" href="/assets/icon.ico" type="image/x-icon" />
+        <!-- font-awesome -->
+        <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+        <link href='http://fonts.googleapis.com/css?family=Spirax' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" href="https://airshit.github.io//css/syntax.css">
+        <link rel="stylesheet" href="https://airshit.github.io//css/main.css">
+        
+        <script type="text/javascript">
+            var _gaq = _gaq || [];
+            _gaq.push(['_setAccount', 'UA-78963269-1']);
+            _gaq.push(['_trackPageview']);
+            (function() {
+              var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+                  ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+              var s = document.getElementsByTagName('script')[0];
+                  s.parentNode.insertBefore(ga, s);
+            })();
+        </script>
+        
+    </head>
+    <body>
+        <div class="head fn-clear">
+            <div class="header">
+                <h1 class="logo">
+                    <a href="https://airshit.github.io/"><i class="icon-anchor"></i></a>
+                </h1>
+                <nav class="nav">
+                    <ul>
+                        
+                        
+                        
+                        <li class="nav-item ">
+                            <a href="https://airshit.github.io//index.html">
+                                首页
+                            </a>
+                            
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item ">
+                            <a href="https://airshit.github.io//categories.html">
+                                分类目录
+                            </a>
+                            
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item ">
+                            <a href="https://airshit.github.io//archives.html">
+                                文章归档
+                            </a>
+                            
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item ">
+                            <a href="https://airshit.github.io//contact.html">
+                                联系我
+                            </a>
+                            
+                        </li>
+                        
+                        
+                        
+                        <li class="nav-item ">
+                            <a href="https://airshit.github.io//links.html">
+                                友情链接
+                            </a>
+                            
+                        </li>
+                        
+                    </ul>
+                </nav>
+                <div class="follow">
+                    
+                    <a href="/atom.xml" target="_blank"><i class="icon-rss"></i></a>
+                    
+                    <a href="http://weibo.com/AIR5HIT" target="_blank"><i class="icon-weibo"></i></a>
+                    
+                    <a href="http://github.com/AIRSHIT" target="_blank"><i class="icon-github-alt"></i></a>
+                    
+                </div>
+            </div>
+        </div>
+        <div class="contain fn-clear">
+            <div class="container fn-clear">
+                <div class="main">
+                    <div class="article article-post">
+    <h2 class="title">南邮综合题2Writeup</h2>
+    <div class="info">
+        <span class="info-title"><i class="icon-calendar"></i> Published: </span>
+        <span class="info-date">02 Aug 2016</span>
+        <span class="info-title"><i class="icon-folder-open"></i> Category: </span>
+        <span class="info-link"><a href="https://airshit.github.io//categories.html#CTF Web-ref" >CTF Web</a></span>
+    </div>
+    <h2>0x00 引言</h2>
+
+<p>南邮的一题Web，zz台风打乱了实习安排= =，什么都不想干碰巧看见这题蛮有趣的就折腾一下。</p>
+
+<h2>0x01 信息收集</h2>
+
+<p>瞎点了一下，搜索功能不能用，留言板也说不是XSS（<del>不是那你搞这个东西干啥</del>）。右键，最下面的CMS说明有文件包含，</p>
+
+<p>···</p>
+
+<h4><a href="./about.php?file=sm.txt">本CMS说明</a></h4>
+
+
+<p>···
+那就是从这里继续了。sm.txt给了几个文件，还有存放管理员密码的表结构，猜测是sql注入拿后台密码。about.php会把文件的内容显示出来，既然是注入，先看so.php把。</p>
+
+<pre><code>so.php
+&lt;?php
+if($_SERVER['HTTP_USER_AGENT']!="Xlcteam Browser"){ 
+    echo '万恶滴黑阔，本功能只有用本公司开发的浏览器才可以用喔~'; 
+    exit(); 
+}
+$id=$_POST['soid'];
+include 'config.php';
+include 'antiinject.php';
+include 'antixss.php';
+$id=antiinject($id);
+$con = mysql_connect($db_address,$db_user,$db_pass) or die("不能连接到数据库！！".mysql_error());
+mysql_select_db($db_name,$con);
+$id=mysql_real_escape_string($id);
+$result=mysql_query("SELECT * FROM `message` WHERE display=1 AND id=$id");
+$rs=mysql_fetch_array($result);
+echo htmlspecialchars($rs['nice']).':&lt;br /&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;'.antixss($rs['say']).'&lt;br /&gt;';
+mysql_free_result($result);
+mysql_free_result($file);
+mysql_close($con);
+?&gt;
+</code></pre>
+
+<p>要修改UA才能继续搜索，然后比较在意的就是antiinject.php，接下来的也没什么特殊的。antiinject.php对sql注入的各种关键字都进行了过滤，因为没有递归过滤，所以seleselectct这样绕过就好了。</p>
+
+<pre><code>antiinject.php
+&lt;?php
+function passencode($content){
+    //$pass=urlencode($content);
+    $array=str_split($content);
+    $pass="";
+    for($i=0;$i&lt;count($array);$i++){
+        if($pass!=""){
+            $pass=$pass." ".(string)ord($array[$i]);
+        }else{
+            $pass=(string)ord($array[$i]);
+         }
+     }
+     return $pass;
+ }
+?&gt;
+</code></pre>
+
+<p>其余的sm.txt提到的文件中，passencode.php好像是对什么密码做的加密。say.php是留言板的代码，不管。往下，config.php不能读取，提示错误，然后就没别的了，开始搞注入把。</p>
+
+<h2>0x02 注入</h2>
+
+<p>打开bp，修改UA，得到搜索的数据。
+<img src="/assets/NUPTZJ/01.png" width=100%>
+图片01
+用/<strong>/代替空格，用and 1=1和and 1=2返回的结果是一样的，让我真的很疑惑这里是不是有注入，后来才发现原来等号也被过滤了囧...改成and/</strong>/1和and/**/0才终于确定。antiinject.php过了蛮多关键字。</p>
+
+<pre><code>antiinject.php
+&lt;?php 
+function antiinject($content){ $keyword=array("select","union","and","from",' ',"'",";",'"',"char","or","count","master","name","pass","admin","+","-","order","="); 
+$info=strtolower($content); 
+for($i=0;$i&lt;=count($keyword);$i++){ 
+    $info=str_replace($keyword[$i], '',$info);
+     } 
+return $info;
+} 
+?&gt;
+</code></pre>
+
+<p>继续拼凑payload，猜解message表的字段数。payload为</p>
+
+<pre><code>soid=0/**/anandd/**/1/**/uniunionon/**/seleselectct/**/1,2,3,4
+</code></pre>
+
+<p>得到响应，字段数为4。
+<img src="/assets/NUPTZJ/02.png" width=100%>
+然后就是得到admin表的数据了，注意这里name、pass、admin都被过滤了，又坑了我一波。
+payload</p>
+
+<pre><code>soid=0/**/anandd/**/1/**/uniunionon/**/seleselectct/**/1,usernanameme,userpapassss,4/**/frfromom/**/adadminmin
+</code></pre>
+
+<p>得到结果。
+<img src="/assets/NUPTZJ/03.png" width=100%></p>
+
+<h2>0x03 后台getshell</h2>
+
+<p>拿到密码后应该就是找后台了，但是这个后台怎么找呢。我四处点了半天都没发现什么。后来发现自己还没用看过about.php的源码，好吧，后台就写在里面:)，也明白了为什么看不了config.php的源码了。进后台，输入得到的密码，提示错误。我又懵逼了，看着那个不正常的密码想起来有个passencode.php，看了一下是ascii码，转换回来就是fuckruntu，登陆。终于成功了，感动。给了一个小马xlcteam.php 。包含查看源码，是没见过的一句话。百度了一下叫做回调后门，用法
+<img src="/assets/NUPTZJ/04.png" width=100%>
+连接成功，
+<img src="/assets/NUPTZJ/05.png" width=100%>
+上菜刀，
+<img src="/assets/NUPTZJ/06.png" width=100%>
+文件包含拿到flga。</p>
+
+<h2>0x04 后记</h2>
+
+<p>南邮大的平台真是棒，为什么我校就没有呢。这题还是参考了不少writeup才做出来，我真是没有天分啊...不过这道题真是非常有趣，一步接一步，脑洞也不是很大，<del>就是没懂那个留言板到底能干什么。</del>感觉又学到了不少东西，非常感谢南邮大的同学能开放这个平台=。=</p>
+
+<h2>0x05 附件</h2>
+
+<ul>
+<li>回调后门的说明：http://blog.csdn.net/settoken/article/details/50946689</li>
+<li>参考的wiriteup1：http://blog.spoock.com/2016/06/20/nuptzj-web2-writeup/</li>
+<li>参考的wiriteup2：http://www.latec0mer.com/archives/nuptzj-ctf-web-misc2-writeup.html</li>
+<li>参考的wiriteup3： http://www.hazzel.cn/archives/10.html</li>
+<li><del>果然我只会参考啊</del></li>
+</ul>
+
+
+    <nav class="article-previous fn-clear">
+        
+        <a class="prev" href="/CTF Web/2016/06/18/ISCC2016.html" rel="bookmark">&laquo;&nbsp;ISCC 2016 Web Writeup</a>
+        
+        
+    </nav>
+    <div class="comment">
+        
+            
+            <div class="ds-thread"></div>
+            
+        
+    </div>
+</div>
+
+                </div>
+                <div class="aside">
+                    <div class="aside-contact">
+                        <h4 class="title">About me</h4>
+                        <div class="det fn-clear">
+                            <div class="det-image">
+                                <img src="/assets/avatar.jpg" />
+                            </div>
+                            <div class="det-text">
+                                <p>还在寻找自己的旅途。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="aside-item">
+                        <h4 class="title">Recent Posts</h4>
+                        <ul class="list">
+                            
+                                <li><a href="https://airshit.github.io//CTF Web/2016/08/02/NUPTZJ.html" title="南邮综合题2Writeup" rel="bookmark">南邮综合题2Writeup</a></li>
+                            
+                                <li><a href="https://airshit.github.io//CTF Web/2016/06/18/ISCC2016.html" title="ISCC 2016 Web Writeup" rel="bookmark">ISCC 2016 Web Writeup</a></li>
+                            
+                        </ul>
+                    </div>
+
+                    <div class="aside-item">
+                        <h4 class="title">Links</h4>
+                        <ul class="list">
+                            
+                                
+                                    
+                                
+                            
+                                
+                            
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="foot">
+            <div class="footer">
+                <p>Copyright 2013. All rights reserved. Powered by <a href="http://jekyllrb.com" target="_blank">Jekyll</a>, Design by <a href="http://www.zhanxin.info" target="_blank">zhanxin.info</a>.</p>
+            </div>
+        </div>
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+        
+            
+                
+                <script type="text/javascript">
+                    var duoshuoQuery = {short_name:"AIRSHIT"};
+                    (function() {
+                        var ds = document.createElement('script');
+                        ds.type = 'text/javascript';ds.async = true;
+                        ds.src = 'http://static.duoshuo.com/embed.js';
+                        ds.charset = 'UTF-8';
+                        (document.getElementsByTagName('head')[0]
+                        || document.getElementsByTagName('body')[0]).appendChild(ds);
+                    })();
+                </script>
+                
+            
+        
+    </body>
+</html>
